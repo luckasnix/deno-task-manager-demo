@@ -1,0 +1,12 @@
+{
+  "tasks": {
+    "start": "deno run --allow-net --watch --unstable-kv server.ts",
+    "test": "deno test --coverage --unstable-kv"
+  },
+  "imports": {
+    "@std/expect": "jsr:@std/expect@1.0.9",
+    "@std/http": "jsr:@std/http@1.0.12",
+    "@std/streams": "jsr:@std/streams@1.0.8",
+    "zod": "npm:zod@3.24.1"
+  }
+}
