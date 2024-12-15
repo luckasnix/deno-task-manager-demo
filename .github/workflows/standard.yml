@@ -1,0 +1,30 @@
+name: Standard
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  standard:
+    name: Standard
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: 2.1.4
+      - name: Install dependencies
+        run: deno install
+      - name: Check types
+        run: deno check .
+      - name: Check format
+        run: deno fmt --check
+      - name: Check lint
+        run: deno lint
+      - name: Test
+        run: deno task test
