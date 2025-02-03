@@ -1,7 +1,7 @@
 import { toJson } from "@std/streams/to-json";
 
-import { todoDataSchema } from "./schemas.ts";
-import type { Todo, TodoData } from "./types.ts";
+import { taskDataSchema } from "./schemas.ts";
+import type { Task, TaskData } from "./types.ts";
 
 export const postHandler = async (
   req: Request,
@@ -15,7 +15,7 @@ export const postHandler = async (
     );
   }
   const body = await toJson(req.body);
-  const isBodyValid = todoDataSchema.safeParse(body).success;
+  const isBodyValid = taskDataSchema.safeParse(body).success;
   // Exceção: Validade dos dados do corpo da requisição
   if (!isBodyValid) {
     return new Response(
@@ -23,13 +23,13 @@ export const postHandler = async (
       { status: 400, headers: { "Content-Type": "application/json" } },
     );
   }
-  const todoId = crypto.randomUUID();
-  const todo: Todo = {
-    id: todoId,
-    data: body as TodoData,
+  const taskId = crypto.randomUUID();
+  const task: Task = {
+    id: taskId,
+    data: body as TaskData,
   };
   // Rotina: Criação da tarefa no banco de dados
-  const result = await kv.set(["todos", todoId], todo);
+  const result = await kv.set(["tasks", taskId], task);
   // Exceção: Processo no banco de dados
   if (!result.ok) {
     return new Response(
@@ -38,7 +38,7 @@ export const postHandler = async (
     );
   }
   return new Response(
-    JSON.stringify({ message: "A tarefa foi criada com sucesso", data: todo }),
+    JSON.stringify({ message: "A tarefa foi criada com sucesso", data: task }),
     { status: 200, headers: { "Content-Type": "application/json" } },
   );
 };
@@ -47,31 +47,31 @@ export const getHandler = async (
   params: URLPatternResult | null | undefined,
   kv: Deno.Kv,
 ): Promise<Response> => {
-  const todoId = params?.pathname.groups.id;
+  const taskId = params?.pathname.groups.id;
   // Rotina: Buscar todas as tarefas se não existir "id" no pathname da URL
-  if (!todoId) {
-    const todoEntries = kv.list({ prefix: ["todos"] });
-    const todos: Todo[] = [];
-    for await (const todoEntry of todoEntries) {
-      todos.push(todoEntry.value as Todo);
+  if (!taskId) {
+    const taskEntries = kv.list({ prefix: ["tasks"] });
+    const tasks: Task[] = [];
+    for await (const taskEntry of taskEntries) {
+      tasks.push(taskEntry.value as Task);
     }
     return new Response(
-      JSON.stringify({ data: todos }),
+      JSON.stringify({ data: tasks }),
       { status: 200, headers: { "Content-Type": "application/json" } },
     );
   }
   // Rotina: Buscar a tarefa requisitada se existir o "id" no pathname da URL
-  const todoEntry = await kv.get(["todos", todoId]);
-  const todo = todoEntry.value as Todo | null;
+  const taskEntry = await kv.get(["tasks", taskId]);
+  const task = taskEntry.value as Task | null;
   // Exceção: Existência da tarefa no banco de dados
-  if (!todo) {
+  if (!task) {
     return new Response(
       JSON.stringify({ error: "Nenhum tarefa encontrada" }),
       { status: 404, headers: { "Content-Type": "application/json" } },
     );
   }
   return new Response(
-    JSON.stringify({ data: todo }),
+    JSON.stringify({ data: task }),
     { status: 200, headers: { "Content-Type": "application/json" } },
   );
 };
@@ -81,9 +81,9 @@ export const putHandler = async (
   params: URLPatternResult | null | undefined,
   kv: Deno.Kv,
 ): Promise<Response> => {
-  const todoId = params?.pathname.groups.id;
+  const taskId = params?.pathname.groups.id;
   // Exceção: Existência do "id" no pathname da URL
-  if (!todoId) {
+  if (!taskId) {
     return new Response(
       JSON.stringify({ error: "O 'id' da tarefa não foi fornecido" }),
       { status: 400, headers: { "Content-Type": "application/json" } },
@@ -97,7 +97,7 @@ export const putHandler = async (
     );
   }
   const body = await toJson(req.body);
-  const isBodyValid = todoDataSchema.safeParse(body).success;
+  const isBodyValid = taskDataSchema.safeParse(body).success;
   // Exceção: Validade dos dados do corpo da requisição
   if (!isBodyValid) {
     return new Response(
@@ -105,12 +105,12 @@ export const putHandler = async (
       { status: 400, headers: { "Content-Type": "application/json" } },
     );
   }
-  const todo: Todo = {
-    id: todoId,
-    data: body as TodoData,
+  const task: Task = {
+    id: taskId,
+    data: body as TaskData,
   };
   // Rotina: Atualização da tarefa no banco de dados
-  const result = await kv.set(["todos", todoId], todo);
+  const result = await kv.set(["tasks", taskId], task);
   // Exceção: Processo no banco de dados
   if (!result.ok) {
     return new Response(
@@ -121,7 +121,7 @@ export const putHandler = async (
   return new Response(
     JSON.stringify({
       message: "A tarefa foi atualizada com sucesso",
-      data: todo,
+      data: task,
     }),
     { status: 200, headers: { "Content-Type": "application/json" } },
   );
@@ -131,16 +131,16 @@ export const deleteHandler = async (
   params: URLPatternResult | null | undefined,
   kv: Deno.Kv,
 ): Promise<Response> => {
-  const todoId = params?.pathname.groups.id;
+  const taskId = params?.pathname.groups.id;
   // Exceção: Existência do "id" no pathname da URL
-  if (!todoId) {
+  if (!taskId) {
     return new Response(
       JSON.stringify({ error: "O 'id' da tarefa não foi fornecido" }),
       { status: 400, headers: { "Content-Type": "application/json" } },
     );
   }
   // Rotina: Deleção da tarefa no banco de dados
-  await kv.delete(["todos", todoId]);
+  await kv.delete(["tasks", taskId]);
   return new Response(
     JSON.stringify({ message: "A tarefa foi deletada com sucesso" }),
     { status: 200, headers: { "Content-Type": "application/json" } },

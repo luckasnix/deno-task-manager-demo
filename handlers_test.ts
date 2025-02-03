@@ -9,7 +9,7 @@ import {
   postHandler,
   putHandler,
 } from "./handlers.ts";
-import type { Todo } from "./types.ts";
+import type { Task } from "./types.ts";
 
 Deno.test("postHandler()", async (t) => {
   const kv = await Deno.openKv(":memory:");
@@ -17,7 +17,7 @@ Deno.test("postHandler()", async (t) => {
   await t.step(
     "sends an error if there is no request body",
     async () => {
-      const request = new Request("http://localhost:3000/todos", {
+      const request = new Request("http://localhost:3000/tasks", {
         method: "POST",
       });
       const response = await postHandler(request, kv);
@@ -27,7 +27,7 @@ Deno.test("postHandler()", async (t) => {
   );
 
   await t.step("sends an error if the body is invalid", async () => {
-    const request = new Request("http://localhost:3000/todos", {
+    const request = new Request("http://localhost:3000/tasks", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text: "Estudar Deno", isCompleted: false }),
@@ -37,8 +37,8 @@ Deno.test("postHandler()", async (t) => {
     expect(body.error).toBe("O corpo da requisição está inválido");
   });
 
-  await t.step("creates a todo correctly", async () => {
-    const request = new Request("http://localhost:3000/todos", {
+  await t.step("creates a task correctly", async () => {
+    const request = new Request("http://localhost:3000/tasks", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text: "Estudar Deno", completed: false }),
@@ -46,7 +46,7 @@ Deno.test("postHandler()", async (t) => {
     const response = await postHandler(request, kv);
     const body = await toJson(response.body!) as {
       message: string;
-      data: Todo;
+      data: Task;
     };
     expect(body.message).toBe("A tarefa foi criada com sucesso");
     expect(body.data.data).toEqual({
@@ -60,7 +60,7 @@ Deno.test("postHandler()", async (t) => {
 
 Deno.test("getHandler()", async (t) => {
   const kv = await Deno.openKv(":memory:");
-  const request = new Request("http://localhost:3000/todos", {
+  const request = new Request("http://localhost:3000/tasks", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ text: "Estudar Deno", completed: false }),
@@ -68,28 +68,28 @@ Deno.test("getHandler()", async (t) => {
   const response = await postHandler(request, kv);
   const body = await toJson(response.body!) as {
     message: string;
-    data: Todo;
+    data: Task;
   };
-  const todoId = body.data.id;
+  const taskId = body.data.id;
 
   await t.step(
     "sends an empty array if there is no 'id' in the pathname",
     async () => {
-      const request = new Request("http://localhost:3000/todos", {
+      const request = new Request("http://localhost:3000/tasks", {
         method: "GET",
       });
       const urlPatternResult = getUrlPatternResult(request.url);
       const response = await getHandler(urlPatternResult, kv);
-      const body = await toJson(response.body!) as { data: Todo[] };
+      const body = await toJson(response.body!) as { data: Task[] };
       expect(Array.isArray(body.data)).toBe(true);
       expect(body.data).toHaveLength(1);
     },
   );
 
   await t.step(
-    "sends an error if there is no todo associated to the 'id' in the pathname",
+    "sends an error if there is no task associated to the 'id' in the pathname",
     async () => {
-      const request = new Request("http://localhost:3000/todos/123", {
+      const request = new Request("http://localhost:3000/tasks/123", {
         method: "GET",
       });
       const urlPatternResult = getUrlPatternResult(request.url);
@@ -100,15 +100,15 @@ Deno.test("getHandler()", async (t) => {
   );
 
   await t.step(
-    "gets the todo associated to the 'id' in the pathname and sends it",
+    "gets the task associated to the 'id' in the pathname and sends it",
     async () => {
-      const request = new Request(`http://localhost:3000/todos/${todoId}`, {
+      const request = new Request(`http://localhost:3000/tasks/${taskId}`, {
         method: "GET",
       });
       const urlPatternResult = getUrlPatternResult(request.url);
       const response = await getHandler(urlPatternResult, kv);
-      const body = await toJson(response.body!) as { data: Todo };
-      expect(body.data.id).toBe(todoId);
+      const body = await toJson(response.body!) as { data: Task };
+      expect(body.data.id).toBe(taskId);
       expect(body.data.data.text).toBe("Estudar Deno");
       expect(body.data.data.completed).toBe(false);
     },
@@ -119,7 +119,7 @@ Deno.test("getHandler()", async (t) => {
 
 Deno.test("putHandler()", async (t) => {
   const kv = await Deno.openKv(":memory:");
-  const request = new Request("http://localhost:3000/todos", {
+  const request = new Request("http://localhost:3000/tasks", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ text: "Estudar Deno", completed: false }),
@@ -127,14 +127,14 @@ Deno.test("putHandler()", async (t) => {
   const response = await postHandler(request, kv);
   const body = await toJson(response.body!) as {
     message: string;
-    data: Todo;
+    data: Task;
   };
-  const todoId = body.data.id;
+  const taskId = body.data.id;
 
   await t.step(
     "sends an error if there is no 'id' in the pathname",
     async () => {
-      const request = new Request("http://localhost:3000/todos", {
+      const request = new Request("http://localhost:3000/tasks", {
         method: "PUT",
       });
       const urlPatternResult = getUrlPatternResult(request.url);
@@ -147,7 +147,7 @@ Deno.test("putHandler()", async (t) => {
   await t.step(
     "sends an error if there is no request body",
     async () => {
-      const request = new Request(`http://localhost:3000/todos/${todoId}`, {
+      const request = new Request(`http://localhost:3000/tasks/${taskId}`, {
         method: "PUT",
       });
       const urlPatternResult = getUrlPatternResult(request.url);
@@ -160,7 +160,7 @@ Deno.test("putHandler()", async (t) => {
   await t.step(
     "sends an error if the request body is invalid",
     async () => {
-      const request = new Request(`http://localhost:3000/todos/${todoId}`, {
+      const request = new Request(`http://localhost:3000/tasks/${taskId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: "Estudar Deno", isCompleted: true }),
@@ -173,9 +173,9 @@ Deno.test("putHandler()", async (t) => {
   );
 
   await t.step(
-    "updates a todo correctly",
+    "updates a task correctly",
     async () => {
-      const request = new Request(`http://localhost:3000/todos/${todoId}`, {
+      const request = new Request(`http://localhost:3000/tasks/${taskId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: "Estudar Deno", completed: true }),
@@ -184,10 +184,10 @@ Deno.test("putHandler()", async (t) => {
       const response = await putHandler(request, urlPatternResult, kv);
       const body = await toJson(response.body!) as {
         message: string;
-        data: Todo;
+        data: Task;
       };
       expect(body.message).toBe("A tarefa foi atualizada com sucesso");
-      expect(body.data.id).toBe(todoId);
+      expect(body.data.id).toBe(taskId);
       expect(body.data.data).toEqual({
         text: "Estudar Deno",
         completed: true,
@@ -200,7 +200,7 @@ Deno.test("putHandler()", async (t) => {
 
 Deno.test("deleteHandler()", async (t) => {
   const kv = await Deno.openKv(":memory:");
-  const request = new Request("http://localhost:3000/todos", {
+  const request = new Request("http://localhost:3000/tasks", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ text: "Estudar Deno", completed: false }),
@@ -208,14 +208,14 @@ Deno.test("deleteHandler()", async (t) => {
   const response = await postHandler(request, kv);
   const body = await toJson(response.body!) as {
     message: string;
-    data: Todo;
+    data: Task;
   };
-  const todoId = body.data.id;
+  const taskId = body.data.id;
 
   await t.step(
     "sends an error if there is no 'id' in the pathname",
     async () => {
-      const request = new Request("http://localhost:3000/todos", {
+      const request = new Request("http://localhost:3000/tasks", {
         method: "DELETE",
       });
       const urlPatternResult = getUrlPatternResult(request.url);
@@ -225,8 +225,8 @@ Deno.test("deleteHandler()", async (t) => {
     },
   );
 
-  await t.step("deletes a todo correctly", async () => {
-    const request = new Request(`http://localhost:3000/todos/${todoId}`, {
+  await t.step("deletes a task correctly", async () => {
+    const request = new Request(`http://localhost:3000/tasks/${taskId}`, {
       method: "DELETE",
     });
     const urlPatternResult = getUrlPatternResult(request.url);

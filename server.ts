@@ -12,7 +12,7 @@ const kv = await Deno.openKv();
 
 const routes: Route[] = [
   {
-    pattern: new URLPattern({ pathname: "/todos/:id?" }),
+    pattern: new URLPattern({ pathname: "/tasks/:id?" }),
     method: ["POST", "GET", "PUT", "DELETE"],
     handler: (req, params) => {
       switch (req.method) {

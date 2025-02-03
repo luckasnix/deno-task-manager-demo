@@ -1,9 +1,9 @@
-export type TodoData = {
+export type TaskData = {
   text: string;
   completed: boolean;
 };
 
-export type Todo = {
+export type Task = {
   id: string;
-  data: TodoData;
+  data: TaskData;
 };

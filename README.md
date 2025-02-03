@@ -1,3 +1,3 @@
-# Todo App com Deno 2 (demo)
+# Task Manager com Deno 2 (demo)
 
-Aplicação demo de um todo app feito com Deno 2.
+Aplicação demo de um gerenciador de tarefas feito com Deno 2.
