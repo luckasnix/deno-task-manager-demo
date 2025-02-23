@@ -95,7 +95,7 @@ Deno.test("getHandler()", async (t) => {
       const urlPatternResult = getUrlPatternResult(request.url);
       const response = await getHandler(urlPatternResult, kv);
       const body = await toJson(response.body!) as { error: string };
-      expect(body.error).toBe("Nenhum tarefa encontrada");
+      expect(body.error).toBe("Nenhuma tarefa encontrada");
     },
   );
 

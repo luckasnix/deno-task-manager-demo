@@ -1,5 +1,6 @@
 import { type Route, route } from "@std/http/unstable-route";
 
+import { JsonResponse } from "./utils.ts";
 import {
   defaultHandler,
   deleteHandler,
@@ -25,7 +26,10 @@ const routes: Route[] = [
         case "DELETE":
           return deleteHandler(params, kv);
         default:
-          return new Response("Método HTTP não permitido", { status: 405 });
+          return new JsonResponse(
+            { error: "Método HTTP não permitido" },
+            { status: 405 },
+          );
       }
     },
   },

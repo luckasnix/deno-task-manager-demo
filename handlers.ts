@@ -1,5 +1,6 @@
 import { toJson } from "@std/streams/to-json";
 
+import { JsonResponse } from "./utils.ts";
 import { taskDataSchema } from "./schemas.ts";
 import type { Task, TaskData } from "./types.ts";
 
@@ -9,18 +10,18 @@ export const postHandler = async (
 ): Promise<Response> => {
   // Exceção: Existência do corpo da requisição
   if (!req.body) {
-    return new Response(
-      JSON.stringify({ error: "O corpo da requisição está ausente" }),
-      { status: 400, headers: { "Content-Type": "application/json" } },
+    return new JsonResponse(
+      { error: "O corpo da requisição está ausente" },
+      { status: 400 },
     );
   }
   const body = await toJson(req.body);
   const isBodyValid = taskDataSchema.safeParse(body).success;
   // Exceção: Validade dos dados do corpo da requisição
   if (!isBodyValid) {
-    return new Response(
-      JSON.stringify({ error: "O corpo da requisição está inválido" }),
-      { status: 400, headers: { "Content-Type": "application/json" } },
+    return new JsonResponse(
+      { error: "O corpo da requisição está inválido" },
+      { status: 400 },
     );
   }
   const taskId = crypto.randomUUID();
@@ -32,14 +33,14 @@ export const postHandler = async (
   const result = await kv.set(["tasks", taskId], task);
   // Exceção: Processo no banco de dados
   if (!result.ok) {
-    return new Response(
-      JSON.stringify({ error: "A tarefa não pôde ser criada" }),
-      { status: 404, headers: { "Content-Type": "application/json" } },
+    return new JsonResponse(
+      { error: "A tarefa não pôde ser criada" },
+      { status: 404 },
     );
   }
-  return new Response(
-    JSON.stringify({ message: "A tarefa foi criada com sucesso", data: task }),
-    { status: 200, headers: { "Content-Type": "application/json" } },
+  return new JsonResponse(
+    { message: "A tarefa foi criada com sucesso", data: task },
+    { status: 200 },
   );
 };
 
@@ -55,9 +56,9 @@ export const getHandler = async (
     for await (const taskEntry of taskEntries) {
       tasks.push(taskEntry.value as Task);
     }
-    return new Response(
-      JSON.stringify({ data: tasks }),
-      { status: 200, headers: { "Content-Type": "application/json" } },
+    return new JsonResponse(
+      { data: tasks },
+      { status: 200 },
     );
   }
   // Rotina: Buscar a tarefa requisitada se existir o "id" no pathname da URL
@@ -65,14 +66,14 @@ export const getHandler = async (
   const task = taskEntry.value as Task | null;
   // Exceção: Existência da tarefa no banco de dados
   if (!task) {
-    return new Response(
-      JSON.stringify({ error: "Nenhum tarefa encontrada" }),
-      { status: 404, headers: { "Content-Type": "application/json" } },
+    return new JsonResponse(
+      { error: "Nenhuma tarefa encontrada" },
+      { status: 404 },
     );
   }
-  return new Response(
-    JSON.stringify({ data: task }),
-    { status: 200, headers: { "Content-Type": "application/json" } },
+  return new JsonResponse(
+    { data: task },
+    { status: 200 },
   );
 };
 
@@ -84,25 +85,25 @@ export const putHandler = async (
   const taskId = params?.pathname.groups.id;
   // Exceção: Existência do "id" no pathname da URL
   if (!taskId) {
-    return new Response(
-      JSON.stringify({ error: "O 'id' da tarefa não foi fornecido" }),
-      { status: 400, headers: { "Content-Type": "application/json" } },
+    return new JsonResponse(
+      { error: "O 'id' da tarefa não foi fornecido" },
+      { status: 400 },
     );
   }
   // Exceção: Existência do corpo da requisição
   if (!req.body) {
-    return new Response(
-      JSON.stringify({ error: "O corpo da requisição está ausente" }),
-      { status: 400, headers: { "Content-Type": "application/json" } },
+    return new JsonResponse(
+      { error: "O corpo da requisição está ausente" },
+      { status: 400 },
     );
   }
   const body = await toJson(req.body);
   const isBodyValid = taskDataSchema.safeParse(body).success;
   // Exceção: Validade dos dados do corpo da requisição
   if (!isBodyValid) {
-    return new Response(
-      JSON.stringify({ error: "O corpo da requisição está inválido" }),
-      { status: 400, headers: { "Content-Type": "application/json" } },
+    return new JsonResponse(
+      { error: "O corpo da requisição está inválido" },
+      { status: 400 },
     );
   }
   const task: Task = {
@@ -113,17 +114,14 @@ export const putHandler = async (
   const result = await kv.set(["tasks", taskId], task);
   // Exceção: Processo no banco de dados
   if (!result.ok) {
-    return new Response(
-      JSON.stringify({ error: "A tarefa não pôde ser atualizada" }),
-      { status: 404, headers: { "Content-Type": "application/json" } },
+    return new JsonResponse(
+      { error: "A tarefa não pôde ser atualizada" },
+      { status: 404 },
     );
   }
-  return new Response(
-    JSON.stringify({
-      message: "A tarefa foi atualizada com sucesso",
-      data: task,
-    }),
-    { status: 200, headers: { "Content-Type": "application/json" } },
+  return new JsonResponse(
+    { message: "A tarefa foi atualizada com sucesso", data: task },
+    { status: 200 },
   );
 };
 
@@ -134,22 +132,22 @@ export const deleteHandler = async (
   const taskId = params?.pathname.groups.id;
   // Exceção: Existência do "id" no pathname da URL
   if (!taskId) {
-    return new Response(
-      JSON.stringify({ error: "O 'id' da tarefa não foi fornecido" }),
-      { status: 400, headers: { "Content-Type": "application/json" } },
+    return new JsonResponse(
+      { error: "O 'id' da tarefa não foi fornecido" },
+      { status: 400 },
     );
   }
   // Rotina: Deleção da tarefa no banco de dados
   await kv.delete(["tasks", taskId]);
-  return new Response(
-    JSON.stringify({ message: "A tarefa foi deletada com sucesso" }),
-    { status: 200, headers: { "Content-Type": "application/json" } },
+  return new JsonResponse(
+    { message: "A tarefa foi deletada com sucesso" },
+    { status: 200 },
   );
 };
 
 export const defaultHandler = () => {
-  return new Response(
-    JSON.stringify({ error: "O recurso não foi encontrado" }),
-    { status: 404, headers: { "Content-Type": "application/json" } },
+  return new JsonResponse(
+    { error: "O recurso não foi encontrado" },
+    { status: 404 },
   );
 };
