@@ -40,7 +40,7 @@ export const postHandler = async (
   }
   return new JsonResponse(
     { message: "A tarefa foi criada com sucesso", data: task },
-    { status: 200 },
+    { status: 201 },
   );
 };
 
